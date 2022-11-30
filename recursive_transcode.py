@@ -15,7 +15,7 @@ def main():
 		print("Debug mode on")
 		print(args)
 
-	if args.path is None and (args.output_path is None and args.inplace is True):
+	if args.path is None or (args.output_path is None and args.inplace is False):
 			print('input path or output path not specified')
 			exit(1)
 
