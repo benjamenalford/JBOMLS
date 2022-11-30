@@ -7,7 +7,11 @@ lossless_extensions = (".flac", ".wav")
 destination_codec = 'alac'
 debug = False
 inplace = False
+
 def main():
+	global debug
+	global inplace
+
 	args = term_args()
 
 	if args.debug:
@@ -36,6 +40,9 @@ def main():
 				convert(file, root, output_dir)
 
 def convert(file, path, output_dir):
+	global debug
+	global inplace
+
 	print(file)
 	file_folder = os.path.basename(path)
 
