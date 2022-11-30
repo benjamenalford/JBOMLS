@@ -11,7 +11,7 @@ inplace = False
 def main():
 	global debug
 	global inplace
-
+	global lossless_extensions
 	args = term_args()
 
 	if args.debug:
