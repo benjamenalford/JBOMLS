@@ -18,7 +18,8 @@ def main():
 	if args.path is None or (args.output_path is None and args.inplace is False):
 			print('input path or output path not specified')
 			exit(1)
-
+	if args.inplace is not None:
+		inplace= True
 	base_dir = args.path
 	if inplace:
 		output_dir = base_dir
