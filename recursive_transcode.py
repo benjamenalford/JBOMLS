@@ -7,11 +7,16 @@ lossless_extensions = (".flac", ".wav")
 destination_codec = 'alac'
 debug = False
 inplace = False
+output_dir=""
+base_dir=""
 
 def main():
 	global debug
 	global inplace
 	global lossless_extensions
+	global output_dir
+	global base_dir
+	global destination_codec
 	args = term_args()
 
 	if args.debug:
@@ -39,9 +44,13 @@ def main():
 			if file.endswith(lossless_extensions):
 				convert(file, root, output_dir)
 
-def convert(file, path, output_dir):
+def convert(file, path):
 	global debug
 	global inplace
+	global lossless_extensions
+	global output_dir
+	global base_dir
+	global destination_codec
 
 	print(file)
 	file_folder = os.path.basename(path)
@@ -62,12 +71,14 @@ def convert(file, path, output_dir):
 		os.system(cmd)
 
 def term_args():
-	parser = argparse.ArgumentParser()
+	parser = argparse.ArgumentParser(
+		prog='recursive_transcode', description='Transcodes a folder recursively')
 	parser.add_argument("-p", "--path", type=str, help="Path to be transcoded.")
 	parser.add_argument("-o", "--output_path", type=str, help="Output path")
 	parser.add_argument("-c", "--output_codec", type=str, help="Output codec")
 	parser.add_argument("-i", "--inplace", type=bool ,help="Transcode In Place")
 	parser.add_argument("-d", "--debug", type=bool, help="debug mode, will not change anything")
+
 	return parser.parse_args()
 
 if __name__ == '__main__':
