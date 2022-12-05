@@ -2,3 +2,6 @@ ffmpeg-python
 filetype
 argparse
 mutagen
+pandas
+bson
+pymongo
