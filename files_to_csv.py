@@ -42,17 +42,19 @@ def get_file_info(file):
 	# populate meta data
 	for keys in info.info.__dict__:
 		file_info[keys] = info.info.__dict__[keys]
+	try:
+		audio = EasyID3(file)
+		valid_keys = EasyID3.valid_keys.keys()
 
-	audio = EasyID3(file)
-	valid_keys = EasyID3.valid_keys.keys()
-
-	# populate ID3 data
-	for keys in valid_keys:
-		file_info[keys] = ''
-		try:
-			file_info[keys] = audio[keys][0]
-		except KeyError as e:
-			pass
+		# populate ID3 data
+		for keys in valid_keys:
+			file_info[keys] = ''
+			try:
+				file_info[keys] = audio[keys][0]
+			except KeyError as e:
+				pass
+	except:
+		pass
 
 	return file_info
 
