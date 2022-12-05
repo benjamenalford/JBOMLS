@@ -6,6 +6,12 @@ from mutagen.easyid3 import EasyID3
 from mutagen.mp3 import MP3
 import pathlib
 import pandas as pd
+from bson import json_util
+from flask import Flask
+import pymongo
+import os
+from flask import request
+
 
 debug = False
 output_csv = ''
@@ -13,6 +19,7 @@ base_dir = ''
 file_extensions = ('.flac', '.wav','.mp3', '.m4a', '.aiff')
 music_files = []
 found_extensions = []
+mongo_url = "mongodb://ira.local:27017"
 def main():
 	global debug
 	global output_csv
@@ -20,6 +27,8 @@ def main():
 	global file_extensions
 	global music_files
 	global found_extensions
+	global mongo_url
+
 	args = term_args()
 
 	if args.path is None :
@@ -29,15 +38,24 @@ def main():
 	base_dir = '/Volumes/Storage/Music Library/Music/' #args.path #'/Users/benjamenalford/Downloads/Wilco/'
 	print(f'Base Directory  = { base_dir}')
 
+	file_count =0
+	client = pymongo.MongoClient(mongo_url)
+	db = client.MusicLibrary
+
+	default_collection = db.MusicLibrary
+
 	for root, subs, files in os.walk(base_dir):
 		for file in files:
 			file_ext = pathlib.Path(file).suffix
 			if file_ext not in found_extensions:
 				found_extensions.append(file_ext)
 			if file.endswith(file_extensions):
-
 				file_info = get_file_info(os.path.join(root, file))
-				music_files.append(file_info)
+				#music_files.append(file_info)
+				collection = db["Music"]
+				collection.insert_one(file_info)
+				file_count +=1
+				print(f'Wrote file #{file_count}')
 
 	#print(music_files)
 	# music_df = pd.DataFrame(music_files)
@@ -52,20 +70,22 @@ def get_file_info(file):
 
 		for keys in info.info.__dict__:
 			file_info[keys] = info.info.__dict__[keys]
-		#store all of it, just in case
-		file_info['EXT'] = info.tags
 
 		#grab the raw tag info
 		for item in info.tags.keys():
-			if type(info.tags[item]) is not list and type(info.tags[item]) is not bool:
+			if type(info.tags[item]) is not list and type(info.tags[item]) is not bool and item is not 'TDRC':
 				if 'text' in info.tags[item].__dict__:
-					file_info[item] = info.tags[item].text
+					file_info[item] = info.tags[item].text[0]
 				elif 'desc' in info.tags[item].__dict__:
-					file_info[item] = info.tags[item].desc
+					file_info[item] = info.tags[item].desc[0]
 				elif 'data' in info.tags[item].__dict__:
-					file_info[item] = info.tags[item].data
+					file_info[item] = info.tags[item].data[0]
 			else:
-				file_info[item] = info.tags[item]
+				if item is not 'TDRC':
+					file_info[item] = info.tags[item]
+				else:
+					date =  info.tags[item]
+					file_info[item] = date.text[0].text
 	except:
 		pass
 
