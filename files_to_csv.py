@@ -21,7 +21,7 @@ def main():
 	if args.path is None :
 			print('input path not specified, using current folder as base')
 
-	base_dir = '/Users/benjamenalford/Downloads/Wilco/'  # args.path
+	base_dir = args.path
 	print(f'Base Directory  = { base_dir}')
 
 	music_files = []
