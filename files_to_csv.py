@@ -1,17 +1,14 @@
 import argparse
-import os
 import csv
+import os
+import pathlib
 import mutagen
+import pandas as pd
+import pymongo
+from bson import json_util
+from flask import request
 from mutagen.easyid3 import EasyID3
 from mutagen.mp3 import MP3
-import pathlib
-import pandas as pd
-from bson import json_util
-from flask import Flask
-import pymongo
-import os
-from flask import request
-
 
 debug = False
 output_csv = ''
