@@ -5,6 +5,7 @@ import mutagen
 from mutagen.easyid3 import EasyID3
 from mutagen.mp3 import MP3
 import pathlib
+import pandas as pd
 
 debug = False
 output_csv = ''
@@ -38,7 +39,9 @@ def main():
 				file_info = get_file_info(os.path.join(root, file))
 				music_files.append(file_info)
 
-	print(music_files)
+	#print(music_files)
+	# music_df = pd.DataFrame(music_files)
+	# music_df.to_json("music.json")
 
 def get_file_info(file):
 	file_info = {}
@@ -49,7 +52,10 @@ def get_file_info(file):
 
 		for keys in info.info.__dict__:
 			file_info[keys] = info.info.__dict__[keys]
-		#file_info['EXT'] = info.tags
+		#store all of it, just in case
+		file_info['EXT'] = info.tags
+
+		#grab the raw tag info
 		for item in info.tags.keys():
 			if type(info.tags[item]) is not list and type(info.tags[item]) is not bool:
 				if 'text' in info.tags[item].__dict__:
