@@ -6,7 +6,6 @@ import mutagen
 import pandas as pd
 import pymongo
 from bson import json_util
-from flask import request
 from mutagen.easyid3 import EasyID3
 from mutagen.mp3 import MP3
 
@@ -17,6 +16,7 @@ file_extensions = ('.flac', '.wav','.mp3', '.m4a', '.aiff')
 music_files = []
 found_extensions = []
 mongo_url = "mongodb://ira.local:27017"
+error_count = 0
 def main():
 	global debug
 	global output_csv
@@ -25,7 +25,7 @@ def main():
 	global music_files
 	global found_extensions
 	global mongo_url
-
+	global error_count
 	args = term_args()
 
 	if args.path is None :
@@ -48,17 +48,20 @@ def main():
 				found_extensions.append(file_ext)
 			if file.endswith(file_extensions):
 				file_info = get_file_info(os.path.join(root, file))
-				#music_files.append(file_info)
 				collection = db["Music"]
 				collection.insert_one(file_info)
 				file_count +=1
 				print(f'Wrote file #{file_count}')
 
 	#print(music_files)
+	print("file extensions found")
+	print(found_extensions)
+	print(f"print error count -  {error_count}")
 	# music_df = pd.DataFrame(music_files)
 	# music_df.to_json("music.json")
 
 def get_file_info(file):
+	global error_count
 	file_info = {}
 	file_info['path'] = file
 
@@ -84,6 +87,7 @@ def get_file_info(file):
 					date =  info.tags[item]
 					file_info[item] = date.text[0].text
 	except:
+		error_count +=1
 		pass
 
 	# populate meta data
@@ -97,8 +101,10 @@ def get_file_info(file):
 			try:
 				file_info[keys] = audio[keys][0]
 			except KeyError as e:
+				error_count +=1
 				pass
 	except:
+		error_count += 1
 		pass
 
 	return file_info
