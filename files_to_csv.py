@@ -9,22 +9,21 @@ debug = False
 output_csv = ''
 base_dir = ''
 file_extensions = ('.flac', '.wav','.mp3', '.m4a', '.aiff')
+music_files = []
 
 def main():
 	global debug
 	global output_csv
 	global base_dir
 	global file_extensions
-
+	global music_files
 	args = term_args()
 
 	if args.path is None :
 			print('input path not specified, using current folder as base')
 
-	base_dir = args.path
+	base_dir = '/Users/benjamenalford/Downloads/Wilco/' #'/Volumes/Storage/Music Library/Music/'  # args.path
 	print(f'Base Directory  = { base_dir}')
-
-	music_files = []
 
 	for root, subs, files in os.walk(base_dir):
 		for file in files:
@@ -36,12 +35,20 @@ def main():
 
 def get_file_info(file):
 	file_info = {}
+	file_info['path'] = file
 	info = mutagen.File(file)
 
-	file_info['path'] = file
-	# populate meta data
 	for keys in info.info.__dict__:
 		file_info[keys] = info.info.__dict__[keys]
+
+	for item in info.tags.values():
+		if not item.FrameID == 'APIC':
+			if 'data' in item.__dict__:
+				file_info[item.FrameID] = item.data
+			elif 'text' in item.__dict__:
+				file_info[item.FrameID] = item.text
+
+	# populate meta data
 	try:
 		audio = EasyID3(file)
 		valid_keys = EasyID3.valid_keys.keys()
