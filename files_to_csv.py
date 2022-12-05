@@ -24,21 +24,29 @@ def main():
 	base_dir = '/Users/benjamenalford/Downloads/Wilco/'  # args.path
 	print(f'Base Directory  = { base_dir}')
 
+	music_files = []
+
 	for root, subs, files in os.walk(base_dir):
 		for file in files:
 			if file.endswith(file_extensions):
 				file_info = get_file_info(os.path.join(root, file))
-				print(file_info)
+				music_files.append(file_info)
 
+	print(music_files)
 
 def get_file_info(file):
+	file_info = {}
 	info = mutagen.File(file)
-	info.info.bitrate
-	info.channels
+
+	file_info['path'] = file
+	# populate meta data
+	for keys in info.info.__dict__:
+		file_info[keys] = info.info.__dict__[keys]
 
 	audio = EasyID3(file)
 	valid_keys = EasyID3.valid_keys.keys()
-	file_info = {}
+
+	# populate ID3 data
 	for keys in valid_keys:
 		file_info[keys] = ''
 		try:
