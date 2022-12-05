@@ -4,30 +4,37 @@ import csv
 import mutagen
 from mutagen.easyid3 import EasyID3
 from mutagen.mp3 import MP3
+import pathlib
 
 debug = False
 output_csv = ''
 base_dir = ''
 file_extensions = ('.flac', '.wav','.mp3', '.m4a', '.aiff')
 music_files = []
-
+found_extensions = []
 def main():
 	global debug
 	global output_csv
 	global base_dir
 	global file_extensions
 	global music_files
+	global found_extensions
 	args = term_args()
 
 	if args.path is None :
 			print('input path not specified, using current folder as base')
 
-	base_dir = '/Users/benjamenalford/Downloads/Wilco/' #'/Volumes/Storage/Music Library/Music/'  # args.path
+	# '/Volumes/Storage/Music Library/Music/'  # args.path
+	base_dir = '/Volumes/Storage/Music Library/Music/' #args.path #'/Users/benjamenalford/Downloads/Wilco/'
 	print(f'Base Directory  = { base_dir}')
 
 	for root, subs, files in os.walk(base_dir):
 		for file in files:
+			file_ext = pathlib.Path(file).suffix
+			if file_ext not in found_extensions:
+				found_extensions.append(file_ext)
 			if file.endswith(file_extensions):
+
 				file_info = get_file_info(os.path.join(root, file))
 				music_files.append(file_info)
 
@@ -36,17 +43,25 @@ def main():
 def get_file_info(file):
 	file_info = {}
 	file_info['path'] = file
-	info = mutagen.File(file)
 
-	for keys in info.info.__dict__:
-		file_info[keys] = info.info.__dict__[keys]
+	try:
+		info = mutagen.File(file)
 
-	for item in info.tags.values():
-		if not item.FrameID == 'APIC':
-			if 'data' in item.__dict__:
-				file_info[item.FrameID] = item.data
-			elif 'text' in item.__dict__:
-				file_info[item.FrameID] = item.text
+		for keys in info.info.__dict__:
+			file_info[keys] = info.info.__dict__[keys]
+		#file_info['EXT'] = info.tags
+		for item in info.tags.keys():
+			if type(info.tags[item]) is not list and type(info.tags[item]) is not bool:
+				if 'text' in info.tags[item].__dict__:
+					file_info[item] = info.tags[item].text
+				elif 'desc' in info.tags[item].__dict__:
+					file_info[item] = info.tags[item].desc
+				elif 'data' in info.tags[item].__dict__:
+					file_info[item] = info.tags[item].data
+			else:
+				file_info[item] = info.tags[item]
+	except:
+		pass
 
 	# populate meta data
 	try:
