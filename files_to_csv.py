@@ -8,7 +8,7 @@ from mutagen.easyid3 import EasyID3
 debug = False
 output_csv = ''
 base_dir = ''
-file_extensions = ('.flac', '.wav','.mp3', '.m4a', '.aiff')
+file_extensions = ('.flac', '.wav', '.mp3', '.m4a', '.aiff', '.m4p', '.mp4')
 music_files = []
 found_extensions = []
 mongo_url = "mongodb://ira.local:27017"
@@ -86,21 +86,7 @@ def get_file_info(file):
 					file_info[k] = v
 	except:
 		error_count +=1
-		pass
-
-	# populate meta data
-	try:
-		audio = EasyID3(file)
-		valid_keys = EasyID3.valid_keys.keys()
-
-		# populate ID3 data
-		for keys in valid_keys:
-			file_info[keys] = ''
-			if keys in audio.__dict__:
-				k,v = sanitize(keys, audio[keys])
-				file_info[k] = v
-	except:
-		error_count += 1
+		print(f'Error opening: {file}' )
 		pass
 
 	return file_info
