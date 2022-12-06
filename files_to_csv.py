@@ -69,23 +69,28 @@ def get_file_info(file):
 		info = mutagen.File(file)
 
 		for keys in info.info.__dict__:
-			file_info[keys] = info.info.__dict__[keys]
+			k,v = sanitize(keys, info.info.__dict__[keys])
+			file_info[k] = v
 
 		#grab the raw tag info
 		for item in info.tags.keys():
-			if type(info.tags[item]) is not list and type(info.tags[item]) is not bool and item is not 'TDRC':
+			if type(info.tags[item]) is not list and type(info.tags[item]) is not bool and item not in ['TDRC', 'TDTG', 'TDOR','TDEN'] :
 				if 'text' in info.tags[item].__dict__:
-					file_info[item] = info.tags[item].text[0]
+					k, v = sanitize(item, info.tags[item].text)
+					file_info[k]=v
 				elif 'desc' in info.tags[item].__dict__:
-					file_info[item] = info.tags[item].desc[0]
+					k, v = sanitize(item, info.tags[item].desc)
+					file_info[k] = v
 				elif 'data' in info.tags[item].__dict__:
-					file_info[item] = info.tags[item].data[0]
+					k, v = sanitize(item, info.tags[item].data)
+					file_info[k] = v
 			else:
-				if item is not 'TDRC':
-					file_info[item] = info.tags[item]
+				if item not in ['TDRC', 'TDTG', 'TDOR','TDEN']:
+					k, v = sanitize(item, info.tags[item])
+					file_info[k] = v
 				else:
-					date =  info.tags[item]
-					file_info[item] = date.text[0].text
+					k, v = sanitize(item, info.tags[item].text[0].text)
+					file_info[k] = v
 	except:
 		error_count +=1
 		pass
@@ -98,16 +103,25 @@ def get_file_info(file):
 		# populate ID3 data
 		for keys in valid_keys:
 			file_info[keys] = ''
-			try:
-				file_info[keys] = audio[keys][0]
-			except KeyError as e:
-				error_count +=1
-				pass
+			if keys in audio.__dict__:
+				k,v = sanitize(keys, audio[keys])
+				file_info[k] = v
 	except:
 		error_count += 1
 		pass
 
 	return file_info
+
+def sanitize(key, value):
+	key = key.replace('\x00', '0')
+	value = value
+	key = key.strip()
+	x = []
+	if (type(value) is list):
+		value = value[0].strip()
+	else:
+		value= value.strip()
+	return key, value
 
 def term_args():
 	parser = argparse.ArgumentParser(prog='files_to_csv', description='Builds CSV of files')
