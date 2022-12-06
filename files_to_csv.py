@@ -1,13 +1,9 @@
 import argparse
-import csv
 import os
 import pathlib
 import mutagen
-import pandas as pd
 import pymongo
-from bson import json_util
 from mutagen.easyid3 import EasyID3
-from mutagen.mp3 import MP3
 
 debug = False
 output_csv = ''
@@ -53,12 +49,9 @@ def main():
 				file_count +=1
 				print(f'Wrote file #{file_count}')
 
-	#print(music_files)
 	print("file extensions found")
 	print(found_extensions)
 	print(f"print error count -  {error_count}")
-	# music_df = pd.DataFrame(music_files)
-	# music_df.to_json("music.json")
 
 def get_file_info(file):
 	global error_count
@@ -115,12 +108,15 @@ def get_file_info(file):
 def sanitize(key, value):
 	key = key.replace('\x00', '0')
 	value = value
-	key = key.strip()
-	x = []
+	key = key
 	if (type(value) is list):
 		value = value[0].strip()
+	elif(type(value) is bool):
+		value = value
+	elif (type(value)  is str):
+		value = value.strip()
 	else:
-		value= value.strip()
+		value= value
 	return key, value
 
 def term_args():
