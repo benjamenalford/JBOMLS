@@ -41,7 +41,7 @@ def main():
     for root, subs, files in os.walk(base_dir):
         for file in files:
             if file.endswith(lossless_extensions):
-                convert(file, root, output_dir)
+                convert(file, root)
 
 
 def convert(file, path):
