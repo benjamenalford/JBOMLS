@@ -3,6 +3,8 @@ import os
 import pathlib
 import mutagen
 import pymongo
+import eyed3
+import mutagen.easyid3
 from mutagen.easyid3 import EasyID3
 
 debug = False
@@ -43,7 +45,7 @@ def main():
 			if file_ext not in found_extensions:
 				found_extensions.append(file_ext)
 			if file.endswith(file_extensions):
-				file_info = get_file_info(os.path.join(root, file))
+				file_info = get_file_info_new(os.path.join(root, file))
 				collection = db["Music"]
 				collection.insert_one(file_info)
 				file_count +=1
@@ -53,6 +55,88 @@ def main():
 	print(found_extensions)
 	print(f"print error count -  {error_count}")
 
+def get_file_info_new(file):
+	global error_count
+	file_info = {}
+	file_info['path'] = file
+	try:
+		audio_file = mutagen.File(file)
+		if audio_file:
+			if audio_file.info:
+				file_info['bitrate'] = audio_file.info.bitrate
+				file_info['sample_rate'] = audio_file.info.sample_rate
+				file_info['time'] = audio_file.info.length
+			else:
+				print(f'error parsing info: {file}')
+			if audio_file.tags:
+				file_info['artist'] = audio_file.tags.get('TPE1')
+				file_info['album_artist'] = audio_file.tags.get('TCOM')
+				file_info['title'] = audio_file.tags.get('TIT1')
+				file_info['album'] = audio_file.tags.get('TALB')
+				file_info['track_num'] = audio_file.tags.get('TRCK')
+				file_info['disc_num'] = audio_file.tags.get('TPOS')
+			else:
+				print(f'error parsing tags: {file}')
+		else:
+			print(f'error loading file: {file}')
+	except mutagen.mp4.MP4MetadataError as e :
+		print(file,"error",e)
+	except mutagen.mp3.HeaderNotFoundError as e:
+		print(file,"error" ,e)
+	finally:
+		error_count += 1
+
+	try:
+		audio_file = EasyID3(file)
+		# populate ID3 data
+		if audio_file:
+			file_info['time'] = audio_file.get('length')
+			file_info['artist'] = audio_file.get('artist')
+			file_info['album_artist'] = audio_file.get('albumartist')
+			file_info['title'] = audio_file.get('title')
+			file_info['album'] = audio_file.get('album')
+			file_info['track_num'] = audio_file.get('tracknumber')
+			file_info['disc_num'] = audio_file.get('discnumber')
+			file_info['compilation'] = audio_file.get('compilation')
+	except Exception as e:
+		print("error",file, e)
+	for key,value in file_info.items():
+		if type(value) not in [str, int, float] and value != None:
+			if type(value) is list:
+				file_info[key] = value[0]
+			else:
+				file_info[key]=value.text[0]
+		elif file_info[key] == None:
+			file_info[key] =''
+		else:
+			file_info[key] = value
+	return file_info
+def get_file_info_eyed3(file):
+	file_info = {}
+	file_info['path'] = file
+	audio_file = eyed3.load(file)
+	if audio_file:
+		if audio_file.info:
+			file_info['bitrate'] = audio_file.info.bit_rate_str
+			file_info['endcode_mode'] = audio_file.info.mode
+			file_info['sample_rate'] = audio_file.info.sample_freq
+			file_info['time'] = audio_file.info.time_secs
+			file_info['file_size'] = audio_file.info.size_bytes
+		else:
+			print(f'error parsing info: {file}')
+		if audio_file.tag:
+			file_info['artist'] = audio_file.tag.artist
+			file_info['album_artist'] = audio_file.tag.album_artist
+			file_info['disc_num'] = audio_file.tag.disc_num.count
+			file_info['disc_total'] = audio_file.tag.disc_num.total
+			file_info['title'] = audio_file.tag.title
+			file_info['track_num'] = audio_file.tag.track_num.count
+			file_info['track_count'] = audio_file.tag.track_num.total
+		else:
+			print(f'error parsing tags: {file}')
+	else:
+		print(f'error loading file: {file}')
+	return file_info
 def get_file_info(file):
 	global error_count
 	file_info = {}
